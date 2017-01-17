@@ -38,6 +38,10 @@ public class ActivityTwo extends Activity implements TextWatcher,View.OnClickLis
     String mText;
     int count;
     RadioButton mRadioButton1,mRadioButton2;
+    String[] from;
+    int[] to;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,16 +75,12 @@ public class ActivityTwo extends Activity implements TextWatcher,View.OnClickLis
 
         count=1;
 
-        mCursor = db.rawQuery("select _id +20001 as _id, width as A,length as B, count*" + Integer.toString(count) + "  as C from plywoods where n_id = " + mText +
-                " union select  _id+20000 as _id, \"фанера\" as A,\"\" as B, \"\"  as C from plywoods where _id = 1"+
-                " union select _id+1,  size,length, count*" + Integer.toString(count) + "  from battens where n_id = " + mText+
-                " union select  _id as _id, \"рейки\" as A,\"\" as B, \"\"  as C from battens where _id = 1",
-                new String[]{});
+        mCursor = db.rawQuery(generateSQL(),new String[]{});
 
         startManagingCursor(mCursor);
 
-        String[] from = new String[] {"A", "B", "C" };
-        int[] to = new int[] { R.id.A,R.id.B,R.id.C  };
+        from = new String[] {"A", "B", "C" };
+        to = new int[] { R.id.A,R.id.B,R.id.C  };
 
         mCursorAdapter = new SimpleCursorAdapter(this, R.layout.item2, mCursor, from, to);
 
@@ -93,6 +93,19 @@ public class ActivityTwo extends Activity implements TextWatcher,View.OnClickLis
         registerForContextMenu(mListView);
 
     }
+
+    String generateSQL(){
+
+        String R;
+
+        if (mRadioButton1.isChecked())
+            R = "select _id,  size as A,length as B, count*" + Integer.toString(count) + " as C from battens where n_id = " + mText;
+        else
+            R = "select _id, width as A,length as B, count*" + Integer.toString(count) + "  as C from plywoods where n_id = " + mText;
+        return R;
+
+    }
+
 
     @Override
     public void onCreateContextMenu(ContextMenu menu, View v,
@@ -149,7 +162,6 @@ public class ActivityTwo extends Activity implements TextWatcher,View.OnClickLis
         public void onClick(DialogInterface dialog, int which) {
             if (which == Dialog.BUTTON_POSITIVE){
 
-                SQLiteDatabase db = mDBHelper.getWritableDatabase();
 
 
 
@@ -191,14 +203,7 @@ public class ActivityTwo extends Activity implements TextWatcher,View.OnClickLis
 
         SQLiteDatabase db = mDBHelper.getWritableDatabase();
 
-        mCursor = db.rawQuery(
-                        "select _id +20001 as _id, width as A,length as B, count*" + Integer.toString(count) + "  as C from plywoods where n_id = " + mText +
-                        " union select  _id+20000 as _id, \"фанера\" as A,\"\" as B, \"\"  as C from plywoods where _id = 1"+
-                        " union select _id+1,  size,length, count* "+Integer.toString(count) +" from battens where n_id = " + mText+
-                        " union select  _id as _id, \"рейки\" as A,\"\" as B, \"\"  as C from battens where _id = 1",
-                new String[]{});
-
-
+        mCursor = db.rawQuery(generateSQL(),new String[]{});
 
         mCursorAdapter.changeCursor(mCursor);
 
@@ -207,13 +212,13 @@ public class ActivityTwo extends Activity implements TextWatcher,View.OnClickLis
     @Override
     public void onClick(View v) {
 
-        RadioButton RB = (RadioButton)v;
-        if (RB.getId() == R.id.radioButton1) {
+        mCursor.close();
 
-        }
-        else {
+        SQLiteDatabase db = mDBHelper.getWritableDatabase();
 
-        }
+        mCursor = db.rawQuery(generateSQL(),new String[]{});
+
+        mCursorAdapter.changeCursor(mCursor);
 
     }
 }
