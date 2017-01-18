@@ -16,7 +16,8 @@
             </intent-filter>
         </activity>
         <activity android:name=".ActivityTwo">
-
+        </activity>
+        <activity android:name=".EditActivity">
         </activity>
     </application>
 

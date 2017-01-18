@@ -53,8 +53,11 @@ public class MainActivity extends ListActivity {
         c.moveToPosition(position);
 
         String S = c.getString(0);
+        String Name = c.getString(1);
 
         mIntent.putExtra("box",S);
+        mIntent.putExtra("name",Name);
+
         startActivity(mIntent);
 
     }

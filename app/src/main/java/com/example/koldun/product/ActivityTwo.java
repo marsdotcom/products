@@ -3,7 +3,9 @@ package com.example.koldun.product;
 import android.app.Activity;
 import android.app.Dialog;
 import android.app.AlertDialog;
+import android.content.ContentValues;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
@@ -30,6 +32,9 @@ public class ActivityTwo extends Activity implements TextWatcher,View.OnClickLis
     static final int CM_EDIT_ID = 2;
     static final int DIALOG_DEL = 1;
 
+    final int REQUEST_EDIT = 1;
+    final int REQUEST_ADD  = 2;
+
     Cursor mCursor;
     DBHelper mDBHelper;
     ListView mListView;
@@ -41,6 +46,7 @@ public class ActivityTwo extends Activity implements TextWatcher,View.OnClickLis
     String[] from;
     int[] to;
     long mItemID;
+    int mItemPosition;
 
 
 
@@ -67,12 +73,7 @@ public class ActivityTwo extends Activity implements TextWatcher,View.OnClickLis
 
         mText = getIntent().getStringExtra("box");
 
-        mCursor = db.rawQuery("select name from products where _id = "+mText,new String[]{});
-        mCursor.moveToFirst();
-
-        String name = mCursor.getString(0);
-
-        mCursor.close();
+        String name = getIntent().getStringExtra("name");
 
         count=1;
 
@@ -121,6 +122,7 @@ public class ActivityTwo extends Activity implements TextWatcher,View.OnClickLis
 
         AdapterView.AdapterContextMenuInfo acmi = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
         mItemID = acmi.id;
+        mItemPosition = acmi.position;
 
         switch (item.getItemId()){
 
@@ -139,11 +141,39 @@ public class ActivityTwo extends Activity implements TextWatcher,View.OnClickLis
 
     void  recEdit(){
 
-        SQLiteDatabase db = mDBHelper.getWritableDatabase();
+       // SQLiteDatabase db = mDBHelper.getWritableDatabase();
 
-        String table;
+        String table,height,width,length,scount;
 
-        if (mRadioButton1.isChecked()) table = "battens"; else table = "plywoods";
+        mCursor.moveToPosition(mItemPosition);
+        String A = mCursor.getString(1);
+        String B = mCursor.getString(2);
+        String C = mCursor.getString(3);
+
+        if (mRadioButton1.isChecked()) {
+            table = "battens";
+            String[] S = A.split("х");
+            if (S.length < 2) S = A.split("x");
+            height = S[0];
+            width  = S[1];
+        } else {
+            table = "plywoods";
+            width = A;
+            height = "";
+        }
+
+        length = B;
+        scount = Integer.toString((Integer.parseInt(C)/count));
+
+        Intent intent = new Intent(this,EditActivity.class);
+        intent.putExtra("battens",mRadioButton1.isChecked());
+        intent.putExtra("edit",true);
+        intent.putExtra("height",height);
+        intent.putExtra("width",width);
+        intent.putExtra("length",length);
+        intent.putExtra("count",scount);
+
+        startActivityForResult(intent,REQUEST_EDIT);
 
         //db.update(table)
 
@@ -165,6 +195,55 @@ public class ActivityTwo extends Activity implements TextWatcher,View.OnClickLis
             return adb.create();
         }
         return super.onCreateDialog(id);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        //super.onActivityResult(requestCode, resultCode, data);
+
+        if (resultCode != RESULT_OK)return;
+
+        if (data == null) return;
+
+        String table,height,width,length,scount;
+
+        ContentValues cv = new ContentValues();
+
+        if (requestCode == REQUEST_EDIT){
+
+            height = data.getStringExtra("height");
+            width  = data.getStringExtra("width");
+            length = data.getStringExtra("length");
+            scount = data.getStringExtra("count");
+
+            if (mRadioButton1.isChecked()) {
+                table = "battens";
+                width = height+"x"+width;
+                cv.put("size",width);
+
+            }else
+            {
+                table = "plywoods";
+                cv.put("width",width);
+            }
+
+            cv.put("length",length);
+            cv.put("count",scount);
+
+            SQLiteDatabase db = mDBHelper.getWritableDatabase();
+
+            db.update(table,cv,"_id = "+mItemID,new String[]{});
+
+            mCursor.requery();
+
+        }else {// requestCode == REQUEST_ADD
+
+
+
+        }
+
+
+
     }
 
     DialogInterface.OnClickListener myClickListener = new DialogInterface.OnClickListener() {
@@ -214,11 +293,15 @@ public class ActivityTwo extends Activity implements TextWatcher,View.OnClickLis
             count = 1;
         }
 
+        stopManagingCursor(mCursor);
+
         mCursor.close();
 
         SQLiteDatabase db = mDBHelper.getWritableDatabase();
 
         mCursor = db.rawQuery(generateSQL(),new String[]{});
+
+        startManagingCursor(mCursor);
 
         mCursorAdapter.changeCursor(mCursor);
 
@@ -227,11 +310,15 @@ public class ActivityTwo extends Activity implements TextWatcher,View.OnClickLis
     @Override
     public void onClick(View v) {
 
+        stopManagingCursor(mCursor);
+
         mCursor.close();
 
         SQLiteDatabase db = mDBHelper.getWritableDatabase();
 
         mCursor = db.rawQuery(generateSQL(),new String[]{});
+
+        startManagingCursor(mCursor);
 
         mCursorAdapter.changeCursor(mCursor);
 
