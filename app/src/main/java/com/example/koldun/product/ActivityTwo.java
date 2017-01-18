@@ -40,6 +40,7 @@ public class ActivityTwo extends Activity implements TextWatcher,View.OnClickLis
     RadioButton mRadioButton1,mRadioButton2;
     String[] from;
     int[] to;
+    long mItemID;
 
 
 
@@ -99,9 +100,9 @@ public class ActivityTwo extends Activity implements TextWatcher,View.OnClickLis
         String R;
 
         if (mRadioButton1.isChecked())
-            R = "select _id,  size as A,length as B, count*" + Integer.toString(count) + " as C from battens where n_id = " + mText;
+            R = "select _id,  size as A,length as B, count*" + count + " as C from battens where n_id = " + mText;
         else
-            R = "select _id, width as A,length as B, count*" + Integer.toString(count) + "  as C from plywoods where n_id = " + mText;
+            R = "select _id, width as A,length as B, count*" + count + "  as C from plywoods where n_id = " + mText;
         return R;
 
     }
@@ -119,24 +120,32 @@ public class ActivityTwo extends Activity implements TextWatcher,View.OnClickLis
     public boolean onContextItemSelected(MenuItem item) {
 
         AdapterView.AdapterContextMenuInfo acmi = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
-        long L = acmi.id;
+        mItemID = acmi.id;
 
         switch (item.getItemId()){
 
-            case CM_EDIT_ID:  recEdit(L); break;
-            case CM_DELETE_ID:recDelete(L); break;
+            case CM_EDIT_ID:  recEdit(); break;
+            case CM_DELETE_ID:recDelete(); break;
         }
 
         return super.onContextItemSelected(item);
     }
 
-    void  recDelete(long l){
+    void  recDelete(){
 
         showDialog(DIALOG_DEL);
 
     }
 
-    void  recEdit(long l){
+    void  recEdit(){
+
+        SQLiteDatabase db = mDBHelper.getWritableDatabase();
+
+        String table;
+
+        if (mRadioButton1.isChecked()) table = "battens"; else table = "plywoods";
+
+        //db.update(table)
 
     }
 
@@ -162,9 +171,15 @@ public class ActivityTwo extends Activity implements TextWatcher,View.OnClickLis
         public void onClick(DialogInterface dialog, int which) {
             if (which == Dialog.BUTTON_POSITIVE){
 
+                SQLiteDatabase db = mDBHelper.getWritableDatabase();
 
+                String table;
 
+                if (mRadioButton1.isChecked()) table = "battens"; else table = "plywoods";
 
+                db.delete(table,"_id = " + mItemID,null);
+
+                mCursor.requery();
             }
         }
     };
