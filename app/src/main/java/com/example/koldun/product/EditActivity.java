@@ -15,7 +15,7 @@ public class EditActivity extends AppCompatActivity implements View.OnClickListe
     LinearLayout heightLayout;
 
     Boolean edit,battens;
-    String table;
+    //String table;
 
 
     @Override
@@ -38,10 +38,12 @@ public class EditActivity extends AppCompatActivity implements View.OnClickListe
 
         battens = getIntent().getBooleanExtra("battens",false);
 
-        heightEdit.setText(getIntent().getStringExtra("height"));
-        widthEdit.setText(getIntent().getStringExtra("width"));
-        lengthEdit.setText(getIntent().getStringExtra("length"));
-        countEdit.setText(getIntent().getStringExtra("count"));
+        if (edit) {
+            heightEdit.setText(getIntent().getStringExtra("height"));
+            widthEdit.setText(getIntent().getStringExtra("width"));
+            lengthEdit.setText(getIntent().getStringExtra("length"));
+            countEdit.setText(getIntent().getStringExtra("count"));
+        }
 
         heightLayout = (LinearLayout)findViewById(R.id.heightLayout);
 

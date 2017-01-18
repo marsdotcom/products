@@ -30,6 +30,7 @@ public class ActivityTwo extends Activity implements TextWatcher,View.OnClickLis
 
     static final int CM_DELETE_ID = 1;
     static final int CM_EDIT_ID = 2;
+    static final int CM_ADD_ID = 3;
     static final int DIALOG_DEL = 1;
 
     final int REQUEST_EDIT = 1;
@@ -115,6 +116,7 @@ public class ActivityTwo extends Activity implements TextWatcher,View.OnClickLis
         super.onCreateContextMenu(menu, v, menuInfo);
         menu.add(0, CM_EDIT_ID,   0,"Изменить");
         menu.add(0, CM_DELETE_ID, 0, "Удалить");
+        menu.add(0,CM_ADD_ID,0,"Добавить");
     }
 
     @Override
@@ -127,17 +129,22 @@ public class ActivityTwo extends Activity implements TextWatcher,View.OnClickLis
         switch (item.getItemId()){
 
             case CM_EDIT_ID:  recEdit(); break;
-            case CM_DELETE_ID:recDelete(); break;
+            case CM_DELETE_ID:showDialog(DIALOG_DEL); break;
+            case CM_ADD_ID: recAdd();break;
         }
 
         return super.onContextItemSelected(item);
     }
 
-    void  recDelete(){
 
-        showDialog(DIALOG_DEL);
+    void recAdd(){
+
+        Intent intent = new Intent(this,EditActivity.class);
+        intent.putExtra("battens",mRadioButton1.isChecked());
+        startActivityForResult(intent,REQUEST_ADD);
 
     }
+
 
     void  recEdit(){
 
@@ -201,48 +208,43 @@ public class ActivityTwo extends Activity implements TextWatcher,View.OnClickLis
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         //super.onActivityResult(requestCode, resultCode, data);
 
-        if (resultCode != RESULT_OK)return;
+        if (resultCode != RESULT_OK) return;
 
         if (data == null) return;
 
-        String table,height,width,length,scount;
+        String table, height, width, length, scount;
 
         ContentValues cv = new ContentValues();
 
-        if (requestCode == REQUEST_EDIT){
 
-            height = data.getStringExtra("height");
-            width  = data.getStringExtra("width");
-            length = data.getStringExtra("length");
-            scount = data.getStringExtra("count");
+        height = data.getStringExtra("height");
+        width = data.getStringExtra("width");
+        length = data.getStringExtra("length");
+        scount = data.getStringExtra("count");
 
-            if (mRadioButton1.isChecked()) {
-                table = "battens";
-                width = height+"x"+width;
-                cv.put("size",width);
+        if (mRadioButton1.isChecked()) {
+            table = "battens";
+            width = height + "x" + width;
+            cv.put("size", width);
 
-            }else
-            {
-                table = "plywoods";
-                cv.put("width",width);
-            }
-
-            cv.put("length",length);
-            cv.put("count",scount);
-
-            SQLiteDatabase db = mDBHelper.getWritableDatabase();
-
-            db.update(table,cv,"_id = "+mItemID,new String[]{});
-
-            mCursor.requery();
-
-        }else {// requestCode == REQUEST_ADD
-
-
-
+        } else {
+            table = "plywoods";
+            cv.put("width", width);
         }
 
+        cv.put("length", length);
+        cv.put("count", scount);
 
+        SQLiteDatabase db = mDBHelper.getWritableDatabase();
+
+        if (requestCode == REQUEST_EDIT) {
+            db.update(table, cv, "_id = " + mItemID, new String[]{});
+        }else if (requestCode == REQUEST_ADD){
+            cv.put("n_id",mText);
+            db.insert(table,null,cv);
+        }
+
+        mCursor.requery();
 
     }
 
